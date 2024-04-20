@@ -52,7 +52,7 @@ class PixelCNNLayer_down(nn.Module):
 
 class PixelCNN(nn.Module):
     def __init__(self, nr_resnet=5, nr_filters=80, nr_logistic_mix=10,
-                    resnet_nonlinearity='concat_elu', input_channels=3):
+                    resnet_nonlinearity='concat_elu', input_channels=3, num_classes=4):
         super(PixelCNN, self).__init__()
         if resnet_nonlinearity == 'concat_elu' :
             self.resnet_nonlinearity = lambda x : concat_elu(x)
@@ -64,6 +64,7 @@ class PixelCNN(nn.Module):
         self.nr_logistic_mix = nr_logistic_mix
         self.right_shift_pad = nn.ZeroPad2d((1, 0, 0, 0))
         self.down_shift_pad  = nn.ZeroPad2d((0, 0, 1, 0))
+        self.label_embedding = nn.Embedding(num_classes, 8*8*40)
 
         down_nr_resnet = [nr_resnet] + [nr_resnet + 1] * 2
         self.down_layers = nn.ModuleList([PixelCNNLayer_down(down_nr_resnet[i], nr_filters,
@@ -97,7 +98,12 @@ class PixelCNN(nn.Module):
         self.init_padding = None
 
 
-    def forward(self, x, sample=False):
+    def forward(self, x, labels=None, sample=False):
+        # if labels is not None:
+        #   B, C, H, W = x.shape
+        #   label_emb = self.label_embedding(labels)
+        #   label_emb = label_emb.view(B, 3, 32 ,32)
+        #   x = x + label_emb
         # similar as done in the tf repo :
         if self.init_padding is not sample:
             xs = [int(y) for y in x.size()]
@@ -128,7 +134,11 @@ class PixelCNN(nn.Module):
         ###    DOWN PASS    ###
         u  = u_list.pop()
         ul = ul_list.pop()
-        print(ul.shape)
+        if labels is not None:
+            B, C, H, W = ul.shape
+            label_emb = self.label_embedding(labels)
+            label_emb = label_emb.view(B, 40, 8 ,8)
+            ul = ul + label_emb
 
         for i in range(3):
             # resnet block
