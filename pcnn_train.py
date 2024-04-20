@@ -24,9 +24,10 @@ def train_or_test(model, data_loader, optimizer, loss_op, device, args, epoch, m
     loss_tracker = mean_tracker()
     
     for batch_idx, item in enumerate(tqdm(data_loader)):
-        model_input, _ = item
+        model_input, label = item
+        label = label.to(device)
         model_input = model_input.to(device)
-        model_output = model(model_input)
+        model_output = model(model_input, label)
         loss = loss_op(model_input, model_output)
         loss_tracker.update(loss.item()/deno)
         if mode == 'training':
@@ -200,14 +201,14 @@ if __name__ == '__main__':
         
         # decrease learning rate
         scheduler.step()
-        train_or_test(model = model,
-                      data_loader = test_loader,
-                      optimizer = optimizer,
-                      loss_op = loss_op,
-                      device = device,
-                      args = args,
-                      epoch = epoch,
-                      mode = 'test')
+        # train_or_test(model = model,
+        #               data_loader = test_loader,
+        #               optimizer = optimizer,
+        #               loss_op = loss_op,
+        #               device = device,
+        #               args = args,
+        #               epoch = epoch,
+        #               mode = 'test')
         
         train_or_test(model = model,
                       data_loader = val_loader,
@@ -217,7 +218,11 @@ if __name__ == '__main__':
                       args = args,
                       epoch = epoch,
                       mode = 'val')
-        
+        val_accuracy = classifier(model, val_loader, device)
+        # Log validation accuracy to wandb
+        if args.en_wandb:
+          wandb.log({"Validation Accuracy": val_accuracy, "epoch": epoch + 1})
+
         if epoch % args.sampling_interval == 0:
             print('......sampling......')
             sample_t = sample(model, args.sample_batch_size, args.obs, sample_op)
