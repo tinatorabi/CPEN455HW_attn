@@ -119,7 +119,7 @@ class PixelCNN(nn.Module):
             u_out, ul_out = self.up_layers[i](u_list[-1], ul_list[-1])
             u_list  += u_out
             ul_list += ul_out
-
+            
             if i != 2:
                 # downscale (only twice)
                 u_list  += [self.downsize_u_stream[i](u_list[-1])]
@@ -128,6 +128,7 @@ class PixelCNN(nn.Module):
         ###    DOWN PASS    ###
         u  = u_list.pop()
         ul = ul_list.pop()
+        print(ul.shape)
 
         for i in range(3):
             # resnet block
