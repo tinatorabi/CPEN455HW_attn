@@ -3,7 +3,7 @@ from layers import *
 
 
 class ConditionalAttention(nn.Module):
-    def __init__(self, channel_size, embedding_size = 32*3*3, reduction_ratio=16):
+    def __init__(self, channel_size, embedding_size, reduction_ratio=16):
         super().__init__()
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
         self.fc = nn.Sequential(
@@ -88,7 +88,7 @@ class PixelCNN(nn.Module):
         self.right_shift_pad = nn.ZeroPad2d((1, 0, 0, 0))
         self.down_shift_pad  = nn.ZeroPad2d((0, 0, 1, 0))
         self.label_embedding = nn.Embedding(num_classes, 32*32*3)
-        self.attention = ConditionalAttention(nr_filters)
+        self.attention = ConditionalAttention(nr_filters,  32*32*3)
                
 
         down_nr_resnet = [nr_resnet] + [nr_resnet + 1] * 2
