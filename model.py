@@ -117,7 +117,7 @@ class PixelCNN(nn.Module):
         ul_list = [self.ul_init[0](x) + self.ul_init[1](x)]
         
         B,C,H,W = (u_list[-1]).shape
-        if labels in not None:
+        if labels is not None:
             label_emd = self.embed_label(labels)
             label_emd = label_emd.view(B, nr_filters, 32, 32)
             u_list[-1] = u_list[-1] + label_emd
