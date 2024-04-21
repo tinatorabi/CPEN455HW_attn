@@ -418,8 +418,8 @@ class PixelCNN(nn.Module):
         self.nr_logistic_mix = nr_logistic_mix
         self.right_shift_pad = nn.ZeroPad2d((1, 0, 0, 0))
         self.down_shift_pad  = nn.ZeroPad2d((0, 0, 1, 0))
-        self.label_embedding = nn.Embedding(num_classes, 32*32*3)         
-        self.cv1 = nn.Conv2d(3, 40, kernel_size=1)
+        self.label_embedding = nn.Embedding(num_classes, 32*32*40)         
+        # self.cv1 = nn.Conv2d(3, 40, kernel_size=1)
         # self.cv1 = nn.Conv2d(3, 40, kernel_size=3, stride=4, padding=1) 
 
         down_nr_resnet = [nr_resnet] + [nr_resnet + 1] * 2
@@ -455,12 +455,12 @@ class PixelCNN(nn.Module):
 
 
     def forward(self, x, labels=None, sample=False):
-        if labels is not None:
-            B, C, H, W = x.shape
-            label_emb = self.label_embedding(labels)  # Shape: (B, 64*64*3)
-            label_emb = label_emb.view(B, 3, 32, 32)  # Reshape to (B, C, H, W)
-            # Add the processed label embeddings to the input x
-            x = x + label_emb
+        # if labels is not None:
+        #     B, C, H, W = x.shape
+        #     label_emb = self.label_embedding(labels)  # Shape: (B, 64*64*3)
+        #     label_emb = label_emb.view(B, 3, 32, 32)  # Reshape to (B, C, H, W)
+        #     # Add the processed label embeddings to the input x
+        #     x = x + label_emb
 
 
         # similar as done in the tf repo :
@@ -513,10 +513,15 @@ class PixelCNN(nn.Module):
                 ul = self.upsize_ul_stream[i](ul)
 
         if labels is not None:
-            label_transformed = self.cv1(label_emb)
-            ul += label_transformed
-        
+            B, C, H, W = x.shape
+            label_emb = self.label_embedding(labels)  # Shape: (B, 64*64*3)
+            label_emb = label_emb.view(B, 40, 32, 32)  # Reshape to (B, C, H, W)
+            # Add the processed label embeddings to the input x
+            ul += label_emb
+            
         x_out = self.nin_out(F.elu(ul))
+
+
 
         assert len(u_list) == len(ul_list) == 0, pdb.set_trace()
 
