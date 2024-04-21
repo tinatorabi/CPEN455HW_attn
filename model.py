@@ -123,10 +123,6 @@ class PixelCNN(nn.Module):
         u_list  = [self.u_init(x)]
         ul_list = [self.ul_init[0](x) + self.ul_init[1](x)]
         for i in range(3):
-            if labels is not None:
-                label_emb = F.interpolate(label_emb, size=u_list[-1].shape[2:], mode='nearest')
-                u_list[-1] += label_emb
-                ul_list[-1] += label_emb
             # resnet block
             u_out, ul_out = self.up_layers[i](u_list[-1], ul_list[-1])
             u_list  += u_out
@@ -142,10 +138,6 @@ class PixelCNN(nn.Module):
         ul = ul_list.pop()
 
         for i in range(3):
-            if labels is not None:
-                label_emb = F.interpolate(label_emb, size=u.shape[2:], mode='nearest')
-                u += label_emb
-                ul += label_emb
             # resnet block
             u, ul = self.down_layers[i](u, ul, u_list, ul_list)
 
