@@ -328,11 +328,6 @@ class PixelCNN(nn.Module):
             u += label_transformed
             ul += label_transformed
         for i in range(3):
-            # if labels is not None:
-            #     label_emb = F.interpolate(label_emb, size=u.shape[2:], mode='nearest')
-            #     u += label_emb
-            #     ul += label_emb
-            # resnet block
             u, ul = self.down_layers[i](u, ul, u_list, ul_list)
 
             # upscale (only twice)
@@ -340,6 +335,10 @@ class PixelCNN(nn.Module):
                 u  = self.upsize_u_stream[i](u)
                 ul = self.upsize_ul_stream[i](ul)
 
+        if labels is not None:
+            label_transformed = self.cv1(label_emb)
+            ul += label_transformed
+        
         x_out = self.nin_out(F.elu(ul))
 
         assert len(u_list) == len(ul_list) == 0, pdb.set_trace()
