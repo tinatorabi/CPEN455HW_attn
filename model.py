@@ -62,9 +62,10 @@ class PixelCNN(nn.Module):
         self.nr_filters = nr_filters
         self.input_channels = input_channels
         self.nr_logistic_mix = nr_logistic_mix
-        self.label_embedding = nn.Embedding(num_classes, nr_filters * 32 * 32)
         self.right_shift_pad = nn.ZeroPad2d((1, 0, 0, 0))
         self.down_shift_pad  = nn.ZeroPad2d((0, 0, 1, 0))
+        self.label_embedding = nn.Embedding(num_classes, 32*32*3)         
+
 
         down_nr_resnet = [nr_resnet] + [nr_resnet + 1] * 2
         self.down_layers = nn.ModuleList([PixelCNNLayer_down(down_nr_resnet[i], nr_filters,
@@ -98,7 +99,7 @@ class PixelCNN(nn.Module):
         self.init_padding = None
 
 
-    def forward(self, x, sample=False, label=None):
+    def forward(self, x, labels=None, sample=False):
         # similar as done in the tf repo :
         if self.init_padding is not sample:
             xs = [int(y) for y in x.size()]
@@ -115,9 +116,10 @@ class PixelCNN(nn.Module):
         x = x if sample else torch.cat((x, self.init_padding), 1)
         u_list  = [self.u_init(x)]
         ul_list = [self.ul_init[0](x) + self.ul_init[1](x)]
-        print(len(u_list))
-        print(len(ul_list))
+        print(u_list[-1].shape)        
+        print(ul_list[-1].shape)
 
+        
         for i in range(3):
             # resnet block
             u_out, ul_out = self.up_layers[i](u_list[-1], ul_list[-1])
