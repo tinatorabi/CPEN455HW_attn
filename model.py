@@ -1,10 +1,12 @@
 import torch.nn as nn
 from layers import *
 
+
 class ConditionalAttention(nn.Module):
     def __init__(self, channel_size, reduction_ratio=16):
         super().__init__()
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
+        # Ensure that the input features to fc match the output features from avg_pool
         self.fc = nn.Sequential(
             nn.Linear(channel_size, channel_size // reduction_ratio, bias=False),
             nn.ReLU(inplace=True),
@@ -12,9 +14,11 @@ class ConditionalAttention(nn.Module):
             nn.Sigmoid()
         )
 
-    def forward(self, x, labels):
+    def forward(self, x, label_emb):
         B, C, _, _ = x.shape
         y = self.avg_pool(x).view(B, C)
+        # Make sure label_emb is used or combined correctly if it's meant to influence the attention
+        # Possibly you need to adjust how label_emb is combined with y
         y = self.fc(y).view(B, C, 1, 1)
         return x * y.expand_as(x)
 
@@ -126,6 +130,7 @@ class PixelCNN(nn.Module):
         B, C, H, W = x.shape
         if labels is not None:
             label_emb = self.label_embedding(labels)
+            print("Label Embedding Shape:", label_emb.shape)
             x = self.attention(x, label_emb)
             # gamma, beta = label_emb[:, :C], label_emb[:, C:2*C]
             # gamma = gamma.view(B, C, 1, 1)
