@@ -6,6 +6,7 @@ from dataset import *
 from tqdm import tqdm
 from pprint import pprint
 import argparse
+import csv
 NUM_CLASSES = 4
 
 
