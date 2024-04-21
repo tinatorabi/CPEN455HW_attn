@@ -22,16 +22,22 @@ def save_predictions_to_csv(image_numbers, predictions, file_path='predictions.c
 
 def classifier_and_save_predictions(model, data_loader, device, file_path):
     model.eval()
-    all_image_numbers = []
     all_predictions = []
+    all_image_numbers = []
+
     for batch_idx, (model_input, categories) in enumerate(tqdm(data_loader)):
         model_input = model_input.to(device)
         predictions = get_label(model, model_input, device).cpu().numpy()
+        batch_size = model_input.size(0)
+
+        # Generate image numbers based on batch index and batch size
+        image_numbers = batch_idx * data_loader.batch_size + torch.arange(batch_size)
         all_image_numbers.extend(image_numbers.numpy())
         all_predictions.extend(predictions)
     
     # Save predictions to a CSV file
     save_predictions_to_csv(all_image_numbers, all_predictions, file_path)
+
 
 
 
