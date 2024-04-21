@@ -15,11 +15,12 @@ import torch
 # You should modify this sample function to get the generated images from your model
 # This function should save the generated images to the gen_data_dir, which is fixed as 'samples'
 # Begin of your code
+
 def my_sample(model, gen_data_dir, device, sample_batch_size=25, obs=(3,32,32), nr_mix=5):
     model.eval()  # Ensure the model is in evaluation mode
     os.makedirs(gen_data_dir, exist_ok=True)  # Ensure the generation directory exists
 
-    for label_idx, label_name in enumerate(my_bidict):
+    for label_idx, label_name in my_bidict.items():
         print(f"Generating images for label: {label_name}")
         labels = torch.full((sample_batch_size,), label_idx, dtype=torch.long, device=device)
         
@@ -31,8 +32,10 @@ def my_sample(model, gen_data_dir, device, sample_batch_size=25, obs=(3,32,32), 
 
         # Process and save images
         generated_images = rescaling_inv(generated_images)  # Undo normalization
-        for i, image in enumerate(generated_images.cpu()):
-            save_images(image, os.path.join(gen_data_dir, f'label_{label_name}_sample_{i}.png'))
+        for i, image in enumerate(generated_images):
+            save_path = os.path.join(gen_data_dir, f'label_{label_name}_sample_{i}.png')
+            # Save the image
+            save_images(image, save_path)
 # End of your code
 
 if __name__ == "__main__":
