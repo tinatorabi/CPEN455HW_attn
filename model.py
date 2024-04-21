@@ -99,11 +99,18 @@ class PixelCNN(nn.Module):
 
 
     def forward(self, x, labels=None, sample=False):
+        # if labels is not None:
+        #   B, C, H, W = x.shape
+        #   label_emb = self.label_embedding(labels)
+        #   label_emb = label_emb.view(B, 3, 32 ,32)
+        #   x = x + label_emb
+        B, C, H, W = x.shape
         if labels is not None:
-          B, C, H, W = x.shape
-          label_emb = self.label_embedding(labels)
-          label_emb = label_emb.view(B, 3, 32 ,32)
-          x = x + label_emb
+            label_emb = self.label_embedding(labels)
+            gamma, beta = label_emb[:, :C], label_emb[:, C:2*C]
+            gamma = gamma.view(B, C, 1, 1)
+            beta = beta.view(B, C, 1, 1)
+            x = gamma * x + beta
         # similar as done in the tf repo :
         if self.init_padding is not sample:
             xs = [int(y) for y in x.size()]
