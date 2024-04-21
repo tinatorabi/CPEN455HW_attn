@@ -1,6 +1,23 @@
 import torch.nn as nn
 from layers import *
 
+class ConditionalAttention(nn.Module):
+    def __init__(self, channel_size, reduction_ratio=16):
+        super().__init__()
+        self.avg_pool = nn.AdaptiveAvgPool2d(1)
+        self.fc = nn.Sequential(
+            nn.Linear(channel_size, channel_size // reduction_ratio, bias=False),
+            nn.ReLU(inplace=True),
+            nn.Linear(channel_size // reduction_ratio, channel_size, bias=False),
+            nn.Sigmoid()
+        )
+
+    def forward(self, x, labels):
+        B, C, _, _ = x.shape
+        y = self.avg_pool(x).view(B, C)
+        y = self.fc(y).view(B, C, 1, 1)
+        return x * y.expand_as(x)
+
 
 class PixelCNNLayer_up(nn.Module):
     def __init__(self, nr_resnet, nr_filters, resnet_nonlinearity):
@@ -65,6 +82,8 @@ class PixelCNN(nn.Module):
         self.right_shift_pad = nn.ZeroPad2d((1, 0, 0, 0))
         self.down_shift_pad  = nn.ZeroPad2d((0, 0, 1, 0))
         self.label_embedding = nn.Embedding(num_classes, 32*32*3)
+        self.attention = ConditionalAttention(nr_filters)
+               
 
         down_nr_resnet = [nr_resnet] + [nr_resnet + 1] * 2
         self.down_layers = nn.ModuleList([PixelCNNLayer_down(down_nr_resnet[i], nr_filters,
@@ -107,10 +126,11 @@ class PixelCNN(nn.Module):
         B, C, H, W = x.shape
         if labels is not None:
             label_emb = self.label_embedding(labels)
-            gamma, beta = label_emb[:, :C], label_emb[:, C:2*C]
-            gamma = gamma.view(B, C, 1, 1)
-            beta = beta.view(B, C, 1, 1)
-            x = gamma * x + beta
+            x = self.attention(x, label_emb)
+            # gamma, beta = label_emb[:, :C], label_emb[:, C:2*C]
+            # gamma = gamma.view(B, C, 1, 1)
+            # beta = beta.view(B, C, 1, 1)
+            # x = gamma * x + beta
         # similar as done in the tf repo :
         if self.init_padding is not sample:
             xs = [int(y) for y in x.size()]
