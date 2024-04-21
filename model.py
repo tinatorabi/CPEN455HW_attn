@@ -1,30 +1,6 @@
 import torch.nn as nn
 from layers import *
 
-
-class ConditionalAttention(nn.Module):
-    def __init__(self, channel_size, embedding_size, reduction_ratio=16):
-        super().__init__()
-        self.avg_pool = nn.AdaptiveAvgPool2d(1)
-        self.fc = nn.Sequential(
-            nn.Linear(channel_size + embedding_size, channel_size // reduction_ratio, bias=False),
-            nn.ReLU(inplace=True),
-            nn.Linear(channel_size // reduction_ratio, channel_size * 2, bias=False),
-            nn.Sigmoid()
-        )
-
-    def forward(self, x, label_emb):
-        B, C, _, _ = x.shape
-        pooled_features = self.avg_pool(x).view(B, C)
-        combined_features = torch.cat((pooled_features, label_emb), dim=1)
-        gamma_beta = self.fc(combined_features)
-        gamma, beta = gamma_beta[:, :C], gamma_beta[:, C:]
-        gamma = gamma.view(B, C, 1, 1)
-        beta = beta.view(B, C, 1, 1)
-        return x * gamma + beta
-
-
-
 class PixelCNNLayer_up(nn.Module):
     def __init__(self, nr_resnet, nr_filters, resnet_nonlinearity):
         super(PixelCNNLayer_up, self).__init__()
@@ -87,9 +63,9 @@ class PixelCNN(nn.Module):
         self.nr_logistic_mix = nr_logistic_mix
         self.right_shift_pad = nn.ZeroPad2d((1, 0, 0, 0))
         self.down_shift_pad  = nn.ZeroPad2d((0, 0, 1, 0))
-        self.label_embedding = nn.Embedding(num_classes, 32*32*3)
-        self.attention = ConditionalAttention(nr_filters,  32*32*3)
-               
+        self.label_embedding = nn.Embedding(num_classes, 64*64*3)
+        self.label_conv = nn.Conv2d(in_channels=3, out_channels=3, 
+                                    kernel_size=4, stride=2, padding=1)               
 
         down_nr_resnet = [nr_resnet] + [nr_resnet + 1] * 2
         self.down_layers = nn.ModuleList([PixelCNNLayer_down(down_nr_resnet[i], nr_filters,
@@ -124,20 +100,18 @@ class PixelCNN(nn.Module):
 
 
     def forward(self, x, labels=None, sample=False):
-        # if labels is not None:
-        #   B, C, H, W = x.shape
-        #   label_emb = self.label_embedding(labels)
-        #   label_emb = label_emb.view(B, 3, 32 ,32)
-        #   x = x + label_emb
-        B, C, H, W = x.shape
         if labels is not None:
-            label_emb = self.label_embedding(labels)
-            print("Label Embedding Shape:", label_emb.shape)
-            x = self.attention(x, label_emb)
-            # gamma, beta = label_emb[:, :C], label_emb[:, C:2*C]
-            # gamma = gamma.view(B, C, 1, 1)
-            # beta = beta.view(B, C, 1, 1)
-            # x = gamma * x + beta
+            B, C, H, W = x.shape
+            label_emb = self.label_embedding(labels)  # Shape: (B, 64*64*3)
+            label_emb = label_emb.view(B, 3, 64, 64)  # Reshape to (B, C, H, W)
+    
+            # Apply convolution to downsample without using interpolate
+            label_emb = self.label_conv(label_emb)  # Shape: (B, 3, 32, 32)
+    
+            # Add the processed label embeddings to the input x
+            x = x + label_emb
+
+
         # similar as done in the tf repo :
         if self.init_padding is not sample:
             xs = [int(y) for y in x.size()]
