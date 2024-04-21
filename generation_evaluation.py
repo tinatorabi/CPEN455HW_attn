@@ -21,8 +21,8 @@ def my_sample(model, gen_data_dir, sample_batch_size = 25, obs = (3,32,32), samp
     for class_idx, gen_dir in enumerate(gen_data_dir):
         # Loop over the number of samples we want to generate in total,
         for _ in range(sample_batch_size):
-            noise = torch.randn(n_samples, *shape).to(device)  # shape is (3, 64, 64) here
-            class_labels = torch.full((n_samples,), class_idx, dtype=torch.long, device=device)
+            noise = torch.randn(sample_batch_size, *obs).to(device)  # shape is (3, 64, 64) here
+            class_labels = torch.full((sample_batch_size,), class_idx, dtype=torch.long, device=device)
 
             with torch.no_grad():
                 # Generate output from the model
