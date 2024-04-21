@@ -10,18 +10,31 @@ import argparse
 
 
 NUM_CLASSES = 4
+import torch.nn.functional as F
 
 def get_logits(model, model_input, device):
-    num_classes = NUM_CLASSES  # Define the number of classes
+    num_classes = NUM_CLASSES  # Defined number of classes
     batch_size = model_input.size(0)
     logits = torch.zeros(batch_size, num_classes, device=device)
     
     for c in range(num_classes):
         labels = torch.full((batch_size,), c, dtype=torch.long, device=device)
         model_output = model(model_input, labels)
-        logits[:, c] = model_output.squeeze()  # Ensure this matches your model's output shape
-
+        
+        # Apply adaptive average pooling to reduce [batch_size, num_features, H, W] to [batch_size, num_features, 1, 1]
+        pooled_output = F.adaptive_avg_pool2d(model_output, (1, 1))
+        # Flatten the output to [batch_size, num_features]
+        flat_output = pooled_output.view(batch_size, -1)
+        
+        # Assuming the number of features is equal to num_classes, or a projection layer is needed otherwise
+        if flat_output.size(1) != num_classes:
+            projection = torch.nn.Linear(flat_output.size(1), num_classes, device=device)
+            logits[:, c] = projection(flat_output).squeeze()
+        else:
+            logits[:, c] = flat_output.squeeze()
+    
     return logits
+
 
 def save_logits(logits, filename):
     torch.save(logits, f"{filename}.pt")  # Save as a PyTorch tensor (.pt file)
