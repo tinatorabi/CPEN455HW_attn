@@ -63,9 +63,7 @@ class PixelCNN(nn.Module):
         self.nr_logistic_mix = nr_logistic_mix
         self.right_shift_pad = nn.ZeroPad2d((1, 0, 0, 0))
         self.down_shift_pad  = nn.ZeroPad2d((0, 0, 1, 0))
-        self.label_embedding = nn.Embedding(num_classes, 64*64*3)
-        self.label_conv = nn.Conv2d(in_channels=3, out_channels=3, 
-                                    kernel_size=4, stride=2, padding=1)               
+        self.label_embedding = nn.Embedding(num_classes, 32*32*3)         
 
         down_nr_resnet = [nr_resnet] + [nr_resnet + 1] * 2
         self.down_layers = nn.ModuleList([PixelCNNLayer_down(down_nr_resnet[i], nr_filters,
@@ -103,11 +101,7 @@ class PixelCNN(nn.Module):
         if labels is not None:
             B, C, H, W = x.shape
             label_emb = self.label_embedding(labels)  # Shape: (B, 64*64*3)
-            label_emb = label_emb.view(B, 3, 64, 64)  # Reshape to (B, C, H, W)
-    
-            # Apply convolution to downsample without using interpolate
-            label_emb = self.label_conv(label_emb)  # Shape: (B, 3, 32, 32)
-    
+            label_emb = label_emb.view(B, 3, 32, 32)  # Reshape to (B, C, H, W)
             # Add the processed label embeddings to the input x
             x = x + label_emb
 
