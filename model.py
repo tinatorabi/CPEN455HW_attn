@@ -3,24 +3,27 @@ from layers import *
 
 
 class ConditionalAttention(nn.Module):
-    def __init__(self, channel_size, reduction_ratio=16):
+    def __init__(self, channel_size, embedding_size, reduction_ratio=16):
         super().__init__()
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
-        # Ensure that the input features to fc match the output features from avg_pool
+        # Ensure the input feature size to the FC layer matches the expected size
         self.fc = nn.Sequential(
-            nn.Linear(channel_size, channel_size // reduction_ratio, bias=False),
+            nn.Linear(embedding_size, channel_size // reduction_ratio, bias=False),
             nn.ReLU(inplace=True),
-            nn.Linear(channel_size // reduction_ratio, channel_size, bias=False),
-            nn.Sigmoid()
+            nn.Linear(channel_size // reduction_ratio, channel_size * 2, bias=False),  # Outputs gamma and beta
+            nn.Sigmoid()  # Optionally, you might want to remove sigmoid depending on the range you need
         )
 
     def forward(self, x, label_emb):
         B, C, _, _ = x.shape
-        y = self.avg_pool(x).view(B, C)
-        # Make sure label_emb is used or combined correctly if it's meant to influence the attention
-        # Possibly you need to adjust how label_emb is combined with y
-        y = self.fc(y).view(B, C, 1, 1)
-        return x * y.expand_as(x)
+        y = self.avg_pool(x).view(B, C)  # This pools over spatial dimensions reducing each feature map to a single number
+        combined_input = torch.cat((y, label_emb), dim=1)  # Concatenate along feature dimension
+        # Pass through FC to generate gamma and beta, ensure dimensionality matches
+        gamma_beta = self.fc(combined_input)
+        gamma, beta = gamma_beta[:, :C], gamma_beta[:, C:]
+        gamma = gamma.view(B, C, 1, 1)
+        beta = beta.view(B, C, 1, 1)
+        return x * gamma + beta  # Apply feature-wise modulation
 
 
 class PixelCNNLayer_up(nn.Module):
