@@ -23,7 +23,7 @@ def get_label_and_log_likelihood(model, model_input, device):
         log_likelihood[:, c] = -nll  # Store the negative log likelihood
     
     _, predicted_labels = log_likelihood.max(1)
-    return predicted_labels, log_likelihood.cpu().numpy()
+    return predicted_labels, log_likelihood.cpu().detach().numpy()
 
 def save_predictions_to_csv(image_numbers, predictions, file_path='predictions.csv'):
     with open(file_path, 'w', newline='') as csvfile:
