@@ -16,7 +16,7 @@ import torch
 # This function should save the generated images to the gen_data_dir, which is fixed as 'samples'
 # Begin of your code
 sample_op = lambda x : sample_from_discretized_mix_logistic(x, 5)
-def sample(model, gen_data_dir, sample_batch_size = 25, obs = (3,32,32), sample_op = sample_op):
+def my_sample(model, gen_data_dir, sample_batch_size = 25, obs = (3,32,32), sample_op = sample_op):
     model.eval()  
     for class_idx, gen_dir in enumerate(gen_data_dir):
         # Loop over the number of samples we want to generate in total,
