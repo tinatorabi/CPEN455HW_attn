@@ -85,13 +85,13 @@ if __name__ == '__main__':
     #Begin of your code
     model = PixelCNN(nr_resnet=1, nr_filters=40, nr_logistic_mix=5, input_channels=3, num_classes=4)
 
-    model.load_state_dict(torch.load('models/pcnn_cpen455_from_scratch_9.pth'))
+    model.load_state_dict(torch.load('models/conditional_pixelcnn.pth'))
     model.to(device)    #End of your code
     
     model = model.to(device)
     #Attention: the path of the model is fixed to 'models/conditional_pixelcnn.pth'
     #You should save your model to this path
-    model.load_state_dict(torch.load('models/pcnn_cpen455_from_scratch_9.pth'))
+    model.load_state_dict(torch.load('models/conditional_pixelcnn.pth'))
     model.eval()
     print('model parameters loaded')
     acc = classifier(model = model, data_loader = dataloader, device = device)
