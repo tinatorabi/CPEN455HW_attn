@@ -83,7 +83,7 @@ if __name__ == '__main__':
     #Write your code here
     #You should replace the random classifier with your trained model
     #Begin of your code
-    model = PixelCNN(nr_resnet=2, nr_filters=40, nr_logistic_mix=5, input_channels=3, num_classes=4)
+    model = PixelCNN(nr_resnet=1, nr_filters=40, nr_logistic_mix=5, input_channels=3, num_classes=4)
 
     model.load_state_dict(torch.load('conditional_pixelcnn.pth'))
     model.to(device)    #End of your code
