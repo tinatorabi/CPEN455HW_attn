@@ -15,27 +15,24 @@ import torch
 # You should modify this sample function to get the generated images from your model
 # This function should save the generated images to the gen_data_dir, which is fixed as 'samples'
 # Begin of your code
+sample_op = lambda x : sample_from_discretized_mix_logistic(x, 5)
+def sample(model, gen_data_dir, sample_batch_size = 25, obs = (3,32,32), sample_op = sample_op):
+    model.eval()  
+    for class_idx, gen_dir in enumerate(gen_data_dir):
+        # Loop over the number of samples we want to generate in total,
+        for _ in range(sample_batch_size):
+            noise = torch.randn(sample_batch_size, *obs).to(device)  # shape is (3, 32, 32) here
+            class_labels = torch.full((sample_batch_size,), class_idx, dtype=torch.long)
 
-def my_sample(model, gen_data_dir, device, sample_batch_size=25, obs=(3,32,32), nr_mix=5):
-    model.eval()  # Ensure the model is in evaluation mode
-    os.makedirs(gen_data_dir, exist_ok=True)  # Ensure the generation directory exists
+            with torch.no_grad():
+                # Generate output from the model
+                model_output = model(noise, class_labels, sample=True)
+                # Sample from the discretized logistic mixture
+                generated_images = sample_op(model_output)
 
-    for label_idx, label_name in my_bidict.items():
-        print(f"Generating images for label: {label_name}")
-        labels = torch.full((sample_batch_size,), label_idx, dtype=torch.long, device=device)
-        
-        # Generate images
-        with torch.no_grad():
-            noise = torch.randn(sample_batch_size, *obs, device=device)
-            model_output = model(noise, labels)
-            generated_images = sample_from_discretized_mix_logistic(model_output, nr_mix)
-
-        # Process and save images
-        generated_images = rescaling_inv(generated_images)  # Undo normalization
-        for i, image in enumerate(generated_images):
-            save_path = os.path.join(gen_data_dir, f'label_{label_name}_sample_{i}.png')
-            # Save the image
-            save_images(image, save_path)
+            # Post-process images and save them
+            for i, image in enumerate(generated_images.cpu()):
+                save_images(image, os.path.join(gen_data_dir, f'sample_{class_idx}_{i}.png'))
 # End of your code
 
 if __name__ == "__main__":
@@ -48,11 +45,13 @@ if __name__ == "__main__":
         os.makedirs(gen_data_dir)
     #Begin of your code
     #Load your model and generate images in the gen_data_dir
-    model = PixelCNN(nr_resnet=1, nr_filters=40, input_channels=3, nr_logistic_mix=5, num_classes=4)
-    model.load_state_dict(torch.load('conditional_pixelcnn.pth'))
+    model = PixelCNN(nr_resnet=1, nr_filters=40, input_channels=3, nr_logistic_mix=5, , num_classes=4)
+    model_path = 'conditional_pixelcnn.pth'
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model.load_state_dict(torch.load(model_path, map_location=device))
     model = model.to(device)
     model = model.eval()
-    my_sample(model=model, gen_data_dir=gen_data_dir, device=device, sample_batch_size=25, obs=(3,32,32), nr_mix=5)
+    my_sample(model=model, gen_data_dir=gen_data_dir)
     #End of your code
     paths = [gen_data_dir, ref_data_dir]
     print("#generated images: {:d}, #reference images: {:d}".format(
