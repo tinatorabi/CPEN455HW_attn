@@ -64,7 +64,8 @@ class PixelCNN(nn.Module):
         self.nr_logistic_mix = nr_logistic_mix
         self.right_shift_pad = nn.ZeroPad2d((1, 0, 0, 0))
         self.down_shift_pad  = nn.ZeroPad2d((0, 0, 1, 0))
-        self.label_embedding = nn.Embedding(num_classes, 32*32*3)         
+        self.label_embedding = nn.Embedding(num_classes, nr_filters * 32 * 32)
+       
 
 
         down_nr_resnet = [nr_resnet] + [nr_resnet + 1] * 2
