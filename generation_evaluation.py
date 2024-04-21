@@ -32,7 +32,7 @@ def my_sample(model, gen_data_dir, device, sample_batch_size=25, obs=(3,32,32), 
         # Process and save images
         generated_images = rescaling_inv(generated_images)  # Undo normalization
         for i, image in enumerate(generated_images.cpu()):
-            save_image(image, os.path.join(gen_data_dir, f'label_{label_name}_sample_{i}.png'))
+            save_images(image, os.path.join(gen_data_dir, f'label_{label_name}_sample_{i}.png'))
 # End of your code
 
 if __name__ == "__main__":
