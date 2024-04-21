@@ -24,7 +24,7 @@ def classifier_and_save_predictions(model, data_loader, device, file_path):
     model.eval()
     all_image_numbers = []
     all_predictions = []
-    for batch_idx, (model_input, categories, image_numbers) in enumerate(tqdm(data_loader)):
+    for batch_idx, (model_input, categories) in enumerate(tqdm(data_loader)):
         model_input = model_input.to(device)
         predictions = get_label(model, model_input, device).cpu().numpy()
         all_image_numbers.extend(image_numbers.numpy())
@@ -61,7 +61,7 @@ if __name__ == '__main__':
     )
 
     model = PixelCNN(nr_resnet=1, nr_filters=40, nr_logistic_mix=5, input_channels=3, num_classes=4)
-    model.load_state_dict(torch.load('conditional_pixelcnn.pth'))
+    model.load_state_dict(torch.load('models/pcnn_cpen455_from_scratch_199.pth'))
     model = model.to(device)
 
     print('Model parameters loaded.')
