@@ -62,6 +62,7 @@ class PixelCNN(nn.Module):
         self.nr_filters = nr_filters
         self.input_channels = input_channels
         self.nr_logistic_mix = nr_logistic_mix
+        self.embed_label  = nn.Embedding(num_classes, 32 * 32 * nr_filters)
         self.right_shift_pad = nn.ZeroPad2d((1, 0, 0, 0))
         self.down_shift_pad  = nn.ZeroPad2d((0, 0, 1, 0))
 
@@ -114,10 +115,14 @@ class PixelCNN(nn.Module):
         x = x if sample else torch.cat((x, self.init_padding), 1)
         u_list  = [self.u_init(x)]
         ul_list = [self.ul_init[0](x) + self.ul_init[1](x)]
-
-        print((u_list[-1]).shape)
-        print((ul_list[-1]).shape)
         
+        B,C,H,W = (u_list[-1]).shape
+        if labels in not None:
+            label_emd = self.embed_label(labels)
+            label_emd = label_emd.view(B, nr_filters, 32, 32)
+            u_list[-1] = u_list[-1] + label_emd
+            ul_list[-1] = ul_list[-1] + label_emd
+            
         for i in range(3):
             # resnet block
             u_out, ul_out = self.up_layers[i](u_list[-1], ul_list[-1])
