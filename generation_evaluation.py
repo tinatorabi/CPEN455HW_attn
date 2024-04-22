@@ -33,9 +33,6 @@ def my_sample(model, gen_data_dir, device, sample_batch_size=25, obs=(3,32,32)):
             output = model(input_tensor, labels=labels, sample=True)
             images = sample_from_discretized_mix_logistic(output, 5)  # Assuming nr_logistic_mix = 5
             images = rescaling_inv(images)  # Assuming rescaling_inv is correctly defined to scale images
-
-        # Save the generated images
-        for i, img in enumerate(images):
             save_images(images, gen_data_dir, label=label)
 # End of your code
 
