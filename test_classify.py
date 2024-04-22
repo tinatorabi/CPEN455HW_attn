@@ -18,10 +18,8 @@ def get_label_and_log_likelihood(model, model_input, device):
     for c in range(num_classes):
         labels = torch.full((batch_size,), c, dtype=torch.long, device=device)
         model_output = model(model_input, labels)
-        # Assuming model_output is the parameters for a logistic mixture distribution
-        nll = discretized_mix_logistic_classify(model_input, model_output)  # Compute NLL
-        log_likelihood[:, c] = -nll  # Store the negative log likelihood
-    
+        nll = discretized_mix_logistic_classify(model_input, model_output)  
+        log_likelihood[:, c] = -nll  
     _, predicted_labels = log_likelihood.max(1)
     return predicted_labels, log_likelihood.cpu().detach().numpy()
 
@@ -48,7 +46,6 @@ def classifier_and_save_data(model, data_loader, device, predictions_file_path, 
         all_image_numbers.extend(image_numbers.numpy())
         all_log_likelihoods.append(log_likelihood)
 
-    # Save predictions and log likelihoods
     save_predictions_to_csv(all_image_numbers, all_predictions, predictions_file_path)
     all_log_likelihoods = np.concatenate(all_log_likelihoods, axis=0)
     np.save(log_likelihood_file_path, all_log_likelihoods)
@@ -74,7 +71,7 @@ if __name__ == '__main__':
     )
 
     model = PixelCNN(nr_resnet=1, nr_filters=40, nr_logistic_mix=5, input_channels=3, num_classes=4)
-    model.load_state_dict(torch.load('conditional_pixelcnn.pth'))
+    model.load_state_dict(torch.load('models/conditional_pixelcnn.pth'))
     model = model.to(device)
 
     predictions_file_path = 'test_predictions.csv'
