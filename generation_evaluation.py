@@ -57,7 +57,7 @@ if __name__ == "__main__":
     model.load_state_dict(torch.load(model_path, map_location=device))
     model = model.to(device)
     model = model.eval()
-    my_sample(model=model, gen_data_dir=gen_data_dir)
+    my_sample(model=model, gen_data_dir=gen_data_dir,device)
     #End of your code
     paths = [gen_data_dir, ref_data_dir]
     print("#generated images: {:d}, #reference images: {:d}".format(
