@@ -36,7 +36,7 @@ def my_sample(model, gen_data_dir, device, sample_batch_size=25, obs=(3,32,32)):
 
         # Save the generated images
         for i, img in enumerate(images):
-            save_images(images, gen_data_dir, label=label_name)
+            save_images(images, gen_data_dir, label=label)
 # End of your code
 
 if __name__ == "__main__":
