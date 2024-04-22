@@ -17,24 +17,16 @@ import torch
 # Begin of your code
 sample_op = lambda x : sample_from_discretized_mix_logistic(x, 5)
 def my_sample(model, gen_data_dir, device, sample_batch_size=25, obs=(3,32,32)):
-    model.eval()  # Ensure the model is in evaluation mode
-    os.makedirs(gen_data_dir, exist_ok=True)  # Make sure the directory exists
-
-    # Generate images for each label
+    model.eval()  
     for label in my_bidict:
         print(f"Label: {label}")
         labels = torch.full((sample_batch_size,), my_bidict[label], dtype=torch.long, device=device)
-
-        # Prepare the input tensor, typically initialized to zeros for autoregressive models
         input_tensor = torch.zeros(sample_batch_size, *obs, device=device)
-
-        # Sample images from the model
         with torch.no_grad():
             output = model(input_tensor, labels=labels, sample=True)
-            images = sample_from_discretized_mix_logistic(output, 5)  # Assuming nr_logistic_mix = 5
-            images = rescaling_inv(images)  # Assuming rescaling_inv is correctly defined to scale images
+            images = sample_from_discretized_mix_logistic(output, 5)  
+            images = rescaling_inv(images)   
             save_images(images, gen_data_dir, label=label)
-# End of your code
 
 if __name__ == "__main__":
     ref_data_dir = "data/test"
