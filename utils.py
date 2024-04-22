@@ -285,10 +285,10 @@ def check_dir_and_create(dir):
     if not os.path.exists(dir):
         os.makedirs(dir, exist_ok=True)
         
-def save_images(tensor, images_folder_path):
-    os.makedirs(images_folder_path, exist_ok=True)
+def save_images(tensor, images_folder_path, label=''):
+    os.makedirs(images_folder_path, exist_ok=True)  # Ensure the directory exists
     for i, img_tensor in enumerate(tensor):
-        img = Image.fromarray(img_tensor.cpu().numpy().transpose(1, 2, 0), mode='RGB')
-        # img = torchvision.transforms.functional.to_pil_image(img_tensor)
-        img_path = f"{images_folder_path}/image_{i+1:02d}.jpg"
+        img = Image.fromarray((img_tensor.cpu().numpy().transpose(1, 2, 0) * 255).astype(np.uint8), mode='RGB')
+        img_path = os.path.join(images_folder_path, f"{label}_image_{i+1:02d}.jpg")  
         img.save(img_path)
+        print(f"Saved image to {img_path}")
