@@ -19,26 +19,19 @@ NUM_CLASSES = len(my_bidict)
 # And get the predicted label, which is a tensor of shape (batch_size,)
 # Begin of your code
 def get_label(model, model_input, device):
-    num_classes = 4  # Define the number of classes somewhere
+    num_classes = 4   
     batch_size = model_input.size(0)
-    # Placeholder for the log likelihood of each class
     log_likelihood = torch.zeros(batch_size, num_classes, device=device)
     
     for c in range(num_classes):
-        # Create a tensor of shape [batch_size] filled with the class index
         labels = torch.full((batch_size,), c, dtype=torch.long, device=device)
-        # Generate the model output for the given class
         model_output = model(model_input, labels)
-        model_output = model(model_input, labels)
-        # Compute the negative log likelihood for the current class
-        # Assuming model_output is the parameters of the logistic mixture distribution and model_input is the observed image
-        nll = discretized_mix_logistic_classify(model_input, model_output)
-        log_likelihood[:, c] = -nll  # Store the negative log likelihood
-    
-    # Select the class with the highest log likelihood (lowest NLL)
+        nll = discretized_mix_logistic_classify(model_input, model_output) #I modified loss to give output for each picture
+        log_likelihood[:, c] = -nll  #negative log likelihood
+
+    # I'm now selecting the class with the highest log likelihood==>(lowest nll)
     _, predicted_labels = log_likelihood.max(1)
     return predicted_labels
-
 # End of your code
 
 def classifier(model, data_loader, device):
@@ -84,10 +77,9 @@ if __name__ == '__main__':
     #You should replace the random classifier with your trained model
     #Begin of your code
     model = PixelCNN(nr_resnet=1, nr_filters=40, nr_logistic_mix=5, input_channels=3, num_classes=4)
+    model.load_state_dict(torch.load('models/conditional_pixelcnn.pth'))
+    #End of your code
 
-    model.load_state_dict(torch.load('conditional_pixelcnn.pth'))
-    model.to(device)    #End of your code
-    
     model = model.to(device)
     #Attention: the path of the model is fixed to 'models/conditional_pixelcnn.pth'
     #You should save your model to this path
