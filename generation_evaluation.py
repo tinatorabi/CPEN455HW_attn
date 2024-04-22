@@ -23,7 +23,7 @@ def my_sample(model, gen_data_dir, device, sample_batch_size=25, obs=(3,32,32)):
     # Generate images for each label
     for label in my_bidict:
         print(f"Label: {label}")
-        labels = torch.full((sample_batch_size,), label, dtype=torch.long, device=device)
+        labels = torch.full((sample_batch_size,), my_bidict[label], dtype=torch.long, device=device)
 
         # Prepare the input tensor, typically initialized to zeros for autoregressive models
         input_tensor = torch.zeros(sample_batch_size, *obs, device=device)
