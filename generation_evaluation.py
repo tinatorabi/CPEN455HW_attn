@@ -36,9 +36,7 @@ def my_sample(model, gen_data_dir, device, sample_batch_size=25, obs=(3,32,32)):
 
         # Save the generated images
         for i, img in enumerate(images):
-            save_path = os.path.join(gen_data_dir, f'{label_name}_sample_{i}.png')
-            save_image(img, save_path)  # Ensure img is correctly scaled for saving
-            print(f'Saved {save_path}')
+            save_images(sample_t, os.path.join(gen_data_dir), label=label)
 # End of your code
 
 if __name__ == "__main__":
