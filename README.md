@@ -1,4 +1,4 @@
-##Deep Learning Course Project: Conditional PixelCNN++ for Image Classification 
+# Deep Learning Course Project: Conditional PixelCNN++ for Image Classification 
 
 **The goal of this project was to implement the Conditional PixelCNN++ model and train it on the given dataset.** After that, the model can both generate new images and classify the given images. 
 link: https://github.com/DSL-Lab/CPEN455HW-2023W2
